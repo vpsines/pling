@@ -25,7 +25,10 @@
 /// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 /// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 ///  IN THE SOFTWARE.
+import 'dart:math';
+
 import 'package:bloc/bloc.dart';
+import 'package:bloc_concurrency/bloc_concurrency.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../data.dart';
@@ -42,7 +45,8 @@ class GameBloc extends Bloc<GameEvent, GameState> {
           guesses: emptyGuesses(),
         )) {
     on<GameStarted>(_onGameStarted);
-    on<LetterKeyPressed>(_onLetterKeyPressed);
+    on<LetterKeyPressed>(_onLetterKeyPressed, transformer: sequential());
+    on<GameFinished>(_onGameFinished);
   }
 
   /// Interacts with storage for updating game stats.
@@ -62,19 +66,41 @@ class GameBloc extends Bloc<GameEvent, GameState> {
     ));
   }
 
-  // TODO: Add logic for GameFinished
-
+  Future<void> _onGameFinished(
+    GameFinished event,
+    Emitter<GameState> emit,
+  ) async {
+    // 2
+    await _statsRepository.addGameFinished(hasWon: event.hasWon);
+    // 3
+    emit(state.copyWith(
+      status: event.hasWon ? GameStatus.success : GameStatus.failure,
+    ));
+  }
 
   Future<void> _onLetterKeyPressed(
-  LetterKeyPressed event,
-  Emitter<GameState> emit,
-) async {
-  final guesses = addLetterToGuesses(state.guesses, event.letter);
+    LetterKeyPressed event,
+    Emitter<GameState> emit,
+  ) async {
+    final puzzle = state.puzzle;
+    final guesses = addLetterToGuesses(state.guesses, event.letter);
 
-  emit(state.copyWith(
-    guesses: guesses,
-  ));
+    // 1
+    emit(state.copyWith(
+      guesses: guesses,
+    ));
 
-  // TODO: check if the game ended.
-}
+    // 2
+    final words = guesses
+        .map((guess) => guess.join())
+        .where((word) => word.isNotEmpty)
+        .toList();
+
+    final hasWon = words.contains(puzzle);
+    final hasMaxAttempts = words.length == kMaxGuesses &&
+        words.every((word) => word.length == kWordLength);
+    if (hasWon || hasMaxAttempts) {
+      add(GameFinished(hasWon: hasWon));
+    }
+  }
 }
