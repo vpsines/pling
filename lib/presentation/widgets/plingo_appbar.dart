@@ -58,9 +58,8 @@ class PlingoAppBar extends StatelessWidget implements PreferredSizeWidget {
             context: context,
             builder: (dContext) => BlocProvider(
               create: (bContext) => StatsCubit(
-                // TODO: Fetch the stats to display them.
                 context.read<GameStatsRepository>(),
-              ),
+              )..fetchStats(),
               child: const GameStatsDialog(),
             ),
           ),
