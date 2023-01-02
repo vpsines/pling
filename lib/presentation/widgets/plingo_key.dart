@@ -26,6 +26,8 @@
 /// FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 ///  IN THE SOFTWARE.
 import 'package:flutter/material.dart';
+import 'package:plingo/presentation/bloc/game_bloc.dart';
+import 'package:provider/provider.dart';
 
 import '../../app/colors.dart';
 
@@ -51,8 +53,7 @@ class PlingoKey extends StatelessWidget {
       borderRadius: BorderRadius.circular(4),
       child: InkWell(
         borderRadius: BorderRadius.circular(4),
-        // TODO: Implement event for letter pressed.
-        onTap: () {},
+        onTap: () => context.read<GameBloc>().add(LetterKeyPressed(letter)),
         splashColor: AppColors.primary.withOpacity(0.3),
         child: Center(
           child: Text(

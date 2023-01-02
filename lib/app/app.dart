@@ -95,8 +95,7 @@ class PlingoApp extends StatelessWidget {
       ),
       home: BlocProvider(
         create: (ctx) =>
-            // TODO: Start game here!
-            GameBloc(ctx.read<GameStatsRepository>()),
+            GameBloc(ctx.read<GameStatsRepository>())..add(GameStarted()),
         child: const GamePage(),
       ),
     );
